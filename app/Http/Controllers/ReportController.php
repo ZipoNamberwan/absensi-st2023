@@ -458,9 +458,6 @@ class ReportController extends Controller
             $attArray[$attendance->userdetail->id] = $userArray;
         }
 
-        // dd($attArray);
-
-
         // Create a new spreadsheet object
         $spreadsheet = new Spreadsheet();
         $worksheet = $spreadsheet->getActiveSheet();
@@ -501,49 +498,51 @@ class ReportController extends Controller
         $i = $startRow + 2;
 
         foreach ($users as $user) {
-            $worksheet->setCellValue('A' . $i, $user->name);
+            if (array_key_exists($user->id, $attArray)) {
+                $worksheet->setCellValue('A' . $i, $user->name);
 
-            $first = new DateTime(Auth::user()->date_start ?? '2023-07-17');
-            $last = new DateTime(date('Y-m-d H:i:s') . ' -17 hours');
-            $interval = DateInterval::createFromDateString('1 day');
-            $period = new DatePeriod($first, $interval, $last);
-            $colStart = 0;
-            foreach ($period as $dt) {
-                $in = null;
-                $out = null;
-                $isneedpermission = false;
-                if (array_key_exists($dt->format("Y-m-d"), $attArray[$user->id])) {
-                    $in = $attArray[$user->id][$dt->format("Y-m-d")]['in'];
-                    $out = $attArray[$user->id][$dt->format("Y-m-d")]['out'];
-                    if ($attArray[$user->id][$dt->format("Y-m-d")]['status'] != null) {
-                        $isneedpermission = true;
+                $first = new DateTime(Auth::user()->date_start ?? '2023-07-17');
+                $last = new DateTime(date('Y-m-d H:i:s') . ' -17 hours');
+                $interval = DateInterval::createFromDateString('1 day');
+                $period = new DatePeriod($first, $interval, $last);
+                $colStart = 0;
+                foreach ($period as $dt) {
+                    $in = null;
+                    $out = null;
+                    $isneedpermission = false;
+                    if (array_key_exists($dt->format("Y-m-d"), $attArray[$user->id])) {
+                        $in = $attArray[$user->id][$dt->format("Y-m-d")]['in'];
+                        $out = $attArray[$user->id][$dt->format("Y-m-d")]['out'];
+                        if ($attArray[$user->id][$dt->format("Y-m-d")]['status'] != null) {
+                            $isneedpermission = true;
+                        }
                     }
+                    $inCol = Utilities::excelColumnJumpByNumber($colStart, 2);
+                    $outCol = Utilities::excelColumnJumpByNumber($colStart, 3);
+                    if (!$isneedpermission) {
+                        $worksheet->setCellValue($inCol . $i, $in);
+                        $worksheet->setCellValue($outCol . $i, $out);
+
+                        if ($in == null) {
+                            $worksheet->getStyle($inCol . $i)->applyFromArray($styleNoAtt);
+                        }
+                        if ($out == null) {
+                            $worksheet->getStyle($outCol . $i)->applyFromArray($styleNoAtt);
+                        }
+                    } else {
+                        $worksheet->setCellValue($inCol . $i, $attArray[$user->id][$dt->format("Y-m-d")]['status']);
+                    }
+
+                    $columnDimension = $worksheet->getColumnDimension($inCol);
+                    $columnDimension->setAutoSize(true);
+                    $columnDimension = $worksheet->getColumnDimension($outCol);
+                    $columnDimension->setAutoSize(true);
+
+                    $colStart = $colStart + 2;
                 }
-                $inCol = Utilities::excelColumnJumpByNumber($colStart, 2);
-                $outCol = Utilities::excelColumnJumpByNumber($colStart, 3);
-                if (!$isneedpermission) {
-                    $worksheet->setCellValue($inCol . $i, $in);
-                    $worksheet->setCellValue($outCol . $i, $out);
 
-                    if ($in == null) {
-                        $worksheet->getStyle($inCol . $i)->applyFromArray($styleNoAtt);
-                    }
-                    if ($out == null) {
-                        $worksheet->getStyle($outCol . $i)->applyFromArray($styleNoAtt);
-                    }
-                } else {
-                    $worksheet->setCellValue($inCol . $i, $attArray[$user->id][$dt->format("Y-m-d")]['status']);
-                }
-
-                $columnDimension = $worksheet->getColumnDimension($inCol);
-                $columnDimension->setAutoSize(true);
-                $columnDimension = $worksheet->getColumnDimension($outCol);
-                $columnDimension->setAutoSize(true);
-
-                $colStart = $colStart + 2;
+                $i++;
             }
-
-            $i++;
         }
 
         $columnDimension = $worksheet->getColumnDimension('A');
