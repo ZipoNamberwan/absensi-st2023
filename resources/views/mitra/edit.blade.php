@@ -55,9 +55,20 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-control-label" for="username">Username dan Password <span class="text-danger">*</span></label>
+                                    <label class="form-control-label" for="username">Username <span class="text-danger">*</span></label>
                                     <input type="text" name="username" class="form-control @error('username') is-invalid @enderror" id="validationCustom03" value="{{ @old('username', $user->email) }}">
                                     @error('username')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-control-label" for="password">Password <span class="text-danger">*</span></label>
+                                    <input type="text" name="password" class="form-control @error('password') is-invalid @enderror" id="validationCustom03" value="{{ @old('password', $user->email) }}">
+                                    @error('password')
                                     <div class="invalid-feedback">
                                         {{ $message }}
                                     </div>

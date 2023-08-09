@@ -42,13 +42,13 @@ class MitraController extends Controller
         $this->validate($request, [
             'name' => 'required',
             'username' => 'required|unique:users,email',
-            'shift' => 'required',
+            'password' => 'required',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->username,
-            'password' => bcrypt($request->username),
+            'password' => bcrypt($request->password),
             'status_shift_id' => $request->shift
         ]);
 
@@ -93,14 +93,14 @@ class MitraController extends Controller
         $this->validate($request, [
             'name' => 'required',
             'username' => 'required',
-            'shift' => 'required'
+            'password' => 'required',
         ]);
 
         $user = User::find($id);
         $user->update([
             'name' => $request->name,
             'email' => $request->username,
-            'password' => bcrypt($request->username),
+            'password' => bcrypt($request->password),
             'status_shift_id' => $request->shift
         ]);
 
